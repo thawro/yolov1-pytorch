@@ -1,6 +1,6 @@
 from torch import nn
 from collections import OrderedDict
-from src.model.architectures.helpers import CNNBlock
+from src.model.architectures.helpers import CNNBlock, Backbone
 
 
 BACKBONE_CFG = [
@@ -38,25 +38,18 @@ BACKBONE_CFG = [
 ]
 
 
-class YOLOv1Backbone(nn.Module):
+class YOLOv1Backbone(Backbone):
     def __init__(self, config, in_channels: int = 3):
-        super().__init__()
-        self.config = config
         layers = []
+        batch_norm = True
         for i, layer_cfg in enumerate(config):
             out_channels, kernel_size, stride, maxpool = layer_cfg
             layers.append(
                 (
                     f"layer_{i}",
-                    CNNBlock(in_channels, out_channels, kernel_size, stride, True, maxpool),
+                    CNNBlock(in_channels, out_channels, kernel_size, stride, batch_norm, maxpool),
                 )
             )
             in_channels = out_channels
-        self.net = nn.Sequential(OrderedDict(layers))
-
-    def forward(self, x):
-        return self.net(x)
-
-    @property
-    def out_channels(self):
-        return self.config[-1][0]
+        net = nn.Sequential(OrderedDict(layers))
+        super().__init__(net=net, out_channels=config[-1][0], name="yolov1_backbone")

@@ -1,7 +1,9 @@
 from torch import nn
 from src.utils.ops import cellboxes_to_boxes, NMS
 from .architectures.backbones.yolov1 import BACKBONE_CFG, YOLOv1Backbone
-from .architectures.backbones.squeeze_net import SqueezeNetBackbone, Backbone
+from .architectures.backbones.squeeze_net import SqueezeNetBackbone
+from src.model.architectures.helpers import Backbone
+
 import torch
 from typing import Literal
 
@@ -38,7 +40,7 @@ class YOLOv1ClassificationHead(nn.Module):
 
 
 class YOLOv1Detector(nn.Module):
-    def __init__(self, S: int, C: int, B: int, backbone: nn.Module, head: nn.Module):
+    def __init__(self, S: int, C: int, B: int, backbone: Backbone, head: nn.Module):
         self.S = S
         self.C = C
         self.B = B
@@ -80,7 +82,7 @@ class YOLOv1Detector(nn.Module):
 
 
 class YOLOv1Classifier(nn.Module):
-    def __init__(self, num_classes: int, backbone: nn.Module):
+    def __init__(self, num_classes: int, backbone: Backbone):
         super().__init__()
         self.num_classes = num_classes
         self.backbone = backbone

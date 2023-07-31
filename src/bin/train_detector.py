@@ -91,7 +91,7 @@ def main():
     head = create_detection_head(S, C, B, BACKBONE_MODE, backbone.out_channels)
     model = YOLOv1Detector(S=S, B=B, C=C, backbone=backbone, head=head).to(DEVICE)
     optimizer = optim.Adam(model.parameters(), lr=2e-5, weight_decay=0)
-    loss_fn = YoloV1Loss(S=S, C=C, B=B)
+    loss_fn = YoloV1Loss(C=C, B=B)
 
     if LOAD_CLASSIFIER_WEIGHTS:
         load_classifier_checkpoint(CLASSIFIER_CKPT_PATH, model)
