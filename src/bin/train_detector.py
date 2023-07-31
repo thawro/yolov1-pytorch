@@ -106,12 +106,11 @@ def main():
         val_MAP, val_loss = val_metrics["MAP"], val_metrics["loss"]
         train_loss = train_loop(model, train_dl, optimizer, loss_fn, device=DEVICE)
 
-        if val_MAP > 0.5:
-            checkpoint = {
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-            }
-            save_checkpoint(checkpoint, path=DETECTOR_CKPT_PATH)
+        ckpt = {
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+        }
+        save_checkpoint(ckpt, path=DETECTOR_CKPT_PATH)
 
         print(
             f"Epoch {epoch}: train/loss: {train_loss:.2f},  val/loss: {val_loss:.2f},  val/MAP: {val_MAP:.2f}"

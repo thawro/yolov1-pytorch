@@ -18,13 +18,10 @@ class BaseDataset(torchvision.datasets.VisionDataset):
         split: Literal["train", "test", "val"] = "train",
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
-        download: bool = False,
     ):
         super().__init__(root, transform=transform, target_transform=target_transform)
         self.split = split
         self._init_paths()
-        if download:
-            self.download()
 
         self.labels = read_text_file(f"{root}/labels.txt")
 
@@ -51,10 +48,6 @@ class BaseDataset(torchvision.datasets.VisionDataset):
     def __len__(self):
         return len(self._label_files)
 
-    def download(self):
-        pass
-
-
 
 class DetectionDataset(BaseDataset):
     def __init__(
@@ -65,11 +58,10 @@ class DetectionDataset(BaseDataset):
         split: Literal["train", "test", "val"] = "train",
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
-        download: bool = False,
     ):
         self.S = S  # grid size
         self.B = B  # num boxes
-        super().__init__(root, split, transform, target_transform, download)
+        super().__init__(root, split, transform, target_transform)
         self.id2label = {i: label for i, label in enumerate(self.labels)}
         self.C = len(self.labels)
 
@@ -120,7 +112,6 @@ class ClassificationDataset(torch.utils.data.Dataset):
         split: Literal["train", "val"] = "train",
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
-        download: bool = False,
     ):
         super().__init__()
         self.root = root
@@ -128,8 +119,6 @@ class ClassificationDataset(torch.utils.data.Dataset):
         self.target_transform = target_transform
         self.split = split
         self._init_paths()
-        if download:
-            self.download()
 
         self.labels = read_text_file(f"{root}/labels.txt")
         self._image_files = glob.glob(f"{self.images_path}/*")
@@ -164,9 +153,6 @@ class ClassificationDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self._label_files)
 
-    def download(self):
-        pass
-
 
 def create_detection_dataloaders(S: int, B: int, dataset_path: str, **dataloader_kwargs):
     transform = A.Compose(
@@ -178,8 +164,8 @@ def create_detection_dataloaders(S: int, B: int, dataset_path: str, **dataloader
     test_ds = DetectionDataset(S, B, dataset_path, "test", transform)
 
     train_dl = DataLoader(dataset=train_ds, shuffle=True, **dataloader_kwargs)
-    val_dl = DataLoader(dataset=val_ds, shuffle=True, **dataloader_kwargs)
-    test_dl = DataLoader(dataset=test_ds, shuffle=True, **dataloader_kwargs)
+    val_dl = DataLoader(dataset=val_ds, shuffle=False, **dataloader_kwargs)
+    test_dl = DataLoader(dataset=test_ds, shuffle=False, **dataloader_kwargs)
 
     return train_dl, val_dl, test_dl
 
@@ -192,6 +178,6 @@ def create_classification_dataloaders(dataset_path: str, **dataloader_kwargs):
     val_ds = ClassificationDataset(dataset_path, "val", transform)
 
     train_dl = DataLoader(dataset=train_ds, shuffle=True, **dataloader_kwargs)
-    val_dl = DataLoader(dataset=val_ds, shuffle=True, **dataloader_kwargs)
+    val_dl = DataLoader(dataset=val_ds, shuffle=False, **dataloader_kwargs)
 
     return train_dl, val_dl
