@@ -24,7 +24,7 @@ def main():
         S=S, 
         B=B, 
         dataset_path=DS_PATH, 
-        batch_size=16, 
+        batch_size=128, 
         num_workers=2, 
         drop_last=True, 
         pin_memory=True
@@ -33,22 +33,20 @@ def main():
     backbone = create_backbone(BACKBONE_MODE)
     head = create_detection_head(S, C, B, BACKBONE_MODE, backbone.out_channels)
     model = YOLOv1Detector(S=S, B=B, C=C, backbone=backbone, head=head).to(DEVICE)
-    loss_fn = YoloV1Loss(S=S, C=C, B=B)
+    loss_fn = YoloV1Loss(C=C, B=B)
     load_checkpoint(DETECTOR_CKPT_PATH, model)
 
-    dataloaders = {"val": val_dl, "test": test_dl}
 
-    for split, dataloader in dataloaders.items():
-        metrics = val_loop(
-            model,
-            dataloader,
-            loss_fn,
-            iou_threshold=IOU_THR,
-            objectness_threshold=OBJ_THR,
-            plot=True,
-            device=DEVICE
-        )
-        print(f"{split}/loss: {metrics['loss']:.2f}, {split}/MAP: {metrics['MAP']:.2f}")
+    metrics = val_loop(
+        model,
+        test_dl,
+        loss_fn,
+        iou_threshold=IOU_THR,
+        objectness_threshold=OBJ_THR,
+        n_plot=1,
+        device=DEVICE
+    )
+    print(f"test/loss: {metrics['loss']:.2f}, test/MAP: {metrics['MAP']:.2f}")
 
 
 if __name__ == "__main__":

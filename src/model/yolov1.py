@@ -12,7 +12,7 @@ class YOLOv1DetectionHead(nn.Module):
     def __init__(self, backbone_out_channels: int, S: int, C: int, B: int):
         super().__init__()
         in_features = backbone_out_channels * S * S
-        mid_features = 496
+        mid_features = 2048
         out_features = S * S * (C + B * 5)
         self.net = nn.Sequential(
             nn.Flatten(),

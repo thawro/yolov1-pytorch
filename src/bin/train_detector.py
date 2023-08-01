@@ -12,17 +12,19 @@ import numpy as np
 
 torch.manual_seed(SEED)
 
-BACKBONE_MODE = "squeeze_net"
+BACKBONE_MODE = "yolov1"
 DS_NAME = "yolo_HWD+"
 # DS_NAME = "VOC"
 DS_PATH = str(DATA_PATH / DS_NAME)
 
-LOAD_CLASSIFIER_WEIGHTS = True
-LOAD_MODEL = False
+LOAD_CLASSIFIER_WEIGHTS = False
+LOAD_MODEL = True
 
 EPOCHS = 100
-DETECTOR_CKPT_PATH = str(ROOT / f"checkpoints/{BACKBONE_MODE}_detector.pt")
-CLASSIFIER_CKPT_PATH = str(ROOT / f"checkpoints/{BACKBONE_MODE}_classifier_backbone.pt")
+DETECTOR_CKPT_PATH = ROOT / f"checkpoints/detector/{DS_NAME}/{BACKBONE_MODE}"
+DETECTOR_CKPT_PATH.mkdir(parents=True, exist_ok=True)
+DETECTOR_CKPT_PATH = str(DETECTOR_CKPT_PATH / "last.pt")
+CLASSIFIER_CKPT_PATH = str(ROOT / f"checkpoints/classifier/{DS_NAME}/{BACKBONE_MODE}/last.pt")
 
 S = 7
 B = 2
@@ -30,7 +32,7 @@ IOU_THR = 0.5
 OBJ_THR = 0.4
 
 
-def val_loop(model, dataloader, loss_fn, iou_threshold, objectness_threshold, plot=False, device='cpu'):
+def val_loop(model, dataloader, loss_fn, iou_threshold, objectness_threshold, n_plot=0, device='cpu'):
     all_pred_boxes = []
     all_true_boxes = []
     loss_values = []
@@ -49,17 +51,6 @@ def val_loop(model, dataloader, loss_fn, iou_threshold, objectness_threshold, pl
         pred_boxes = model.perform_nms(pred_boxes, iou_threshold, objectness_threshold)
         true_boxes = cellboxes_to_boxes(y, S=model.S, C=model.C, B=model.B)
 
-        if plot:
-            for i in range(8):
-                nms_boxes = torch.tensor(pred_boxes[i]).numpy()
-                img = (x[i].permute(1, 2, 0).to("cpu").numpy() * 255).astype(np.uint8)
-                class_ids = nms_boxes[:, 0].astype(np.int64)
-                obj_scores = nms_boxes[:, 1]
-                boxes_xywhn = nms_boxes[:, 2:]
-                plot_yolo_labels(
-                    img, boxes_xywhn, class_ids, obj_scores, plot=True, id2label=dataloader.dataset.id2label
-                )
-
         for idx in range(batch_size):
             for nms_box in pred_boxes[idx]:
                 all_pred_boxes.append([train_idx] + nms_box)
@@ -69,6 +60,19 @@ def val_loop(model, dataloader, loss_fn, iou_threshold, objectness_threshold, pl
                     all_true_boxes.append([train_idx] + box.tolist())
 
             train_idx += 1
+
+        for i in range(n_plot):
+            nms_boxes = torch.tensor(pred_boxes[i]).numpy()
+            img = (x[i].permute(1, 2, 0).to("cpu").numpy() * 255).astype(np.uint8)
+            class_ids = nms_boxes[:, 0].astype(np.int64)
+            obj_scores = nms_boxes[:, 1]
+            obj_scores = np.clip(obj_scores, 0, 1)
+            boxes_xywhn = nms_boxes[:, 2:]
+            plot_yolo_labels(
+                img, boxes_xywhn, class_ids, obj_scores, plot=True, id2label=dataloader.dataset.id2label
+            )
+
+        
 
     mean_avg_prec = MAP(model.C, all_pred_boxes, all_true_boxes, iou_threshold=iou_threshold)
     mean_loss = sum(loss_values) / len(loss_values)

@@ -14,14 +14,15 @@ from tqdm.auto import tqdm
 log = get_pylogger(__name__)
 torch.manual_seed(SEED)
 
-BACKBONE_MODE = "squeeze_net"
+BACKBONE_MODE = "yolov1"
 
 DS_NAME = "HWD+"
 DS_PATH = str(DATA_PATH / DS_NAME)
 LOAD_MODEL = False
 EPOCHS = 1000
-CKPT_PATH = str(ROOT / f"checkpoints/{BACKBONE_MODE}_classifier_backbone.pt")
-
+CKPT_PATH = ROOT / f"checkpoints/classifier/{DS_NAME}/{BACKBONE_MODE}"
+CKPT_PATH.mkdir(parents=True, exist_ok=True)
+CKPT_PATH = str(CKPT_PATH / "last.pt")
 
 
 def val_loop(model, dataloader, loss_fn, device="cpu"):
