@@ -2,8 +2,8 @@ import torch
 from collections import Counter
 from .pylogger import get_pylogger
 import numpy as np
-log = get_pylogger(__name__)
 
+log = get_pylogger(__name__)
 
 
 def xywh2xyxy(boxes_xywh: np.ndarray):
@@ -16,6 +16,7 @@ def xywh2xyxy(boxes_xywh: np.ndarray):
     boxes_xyxy = np.column_stack((x1, y1, x2, y2))
     return boxes_xyxy.astype(boxes_xywh.dtype)
 
+
 def xywhn2xywh(boxes_xywhn: np.ndarray, h: int, w: int):
     """Parse boxes format from xywhn to xywh using image height (`h`) and width (`w`)"""
     xn, yn, wn, hn = boxes_xywhn.T
@@ -27,7 +28,7 @@ def xywhn2xywh(boxes_xywhn: np.ndarray, h: int, w: int):
     return boxes_xywh.astype(np.int16)
 
 
-def calculate_boxes_iou(boxes_preds, boxes_labels):
+def calculate_boxes_iou(boxes_preds: torch.Tensor, boxes_labels: torch.Tensor):
     """
     Calculates intersection over union
 
@@ -62,12 +63,12 @@ def calculate_boxes_iou(boxes_preds, boxes_labels):
     return intersection / (box1_area + box2_area - intersection + 1e-6)
 
 
-def NMS(bboxes, iou_threshold, objectness_threshold):
+def NMS(bboxes: torch.Tensor | list, iou_threshold: float, objectness_threshold: float):
     """
     Does Non Max Suppression given bboxes
 
     Parameters:
-        bboxes (Tensor): Tensor of shape [S*S, 6]
+        bboxes (torch.Tensor): Tensor of shape [S*S, 6]
             columns: [best_class, objectness, x, y, w, h]
         iou_threshold (float): threshold where predicted bboxes is correct
         objectness_threshold (float): threshold to remove predicted bboxes (independent of IoU)
@@ -75,7 +76,7 @@ def NMS(bboxes, iou_threshold, objectness_threshold):
     Returns:
         list: bboxes after performing NMS given a specific IoU threshold
     """
-    if not isinstance(bboxes, list):
+    if isinstance(bboxes, torch.Tensor):
         bboxes = bboxes.tolist()
 
     bboxes = [box for box in bboxes if box[1] > objectness_threshold]
@@ -97,7 +98,9 @@ def NMS(bboxes, iou_threshold, objectness_threshold):
     return bboxes_after_nms
 
 
-def MAP(C, pred_boxes, true_boxes, iou_threshold=0.5):
+def MAP(
+    C: int, pred_boxes: list[list[int]], true_boxes: list[list[int]], iou_threshold: float = 0.5
+):
     """
     Calculates mean average precision
 

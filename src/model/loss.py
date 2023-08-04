@@ -3,10 +3,8 @@ from torch import nn
 from src.utils.ops import calculate_boxes_iou
 
 
-class YoloV1Loss(nn.Module):
-    def __init__(
-        self, C: int, B: int, lambda_coord: float = 5.0, lambda_noobj: float = 0.5
-    ):
+class YoloV1Loss(nn.modules.loss._Loss):
+    def __init__(self, C: int, B: int, lambda_coord: float = 5.0, lambda_noobj: float = 0.5):
         super().__init__()
         self.C = C
         self.B = B

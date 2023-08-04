@@ -1,3 +1,5 @@
+"""Parse VOC dataset annotation format from VOC format (xyxy) to YOLO format (xywh)"""
+
 import xml.etree.ElementTree as ET
 from src.utils.config import DATA_PATH
 from src.utils.utils import read_text_file, save_txt_to_file

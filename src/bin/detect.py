@@ -1,52 +1,68 @@
-from src.model.loss import YoloV1Loss
-from src.model.yolov1 import YOLOv1Detector, create_backbone, create_detection_head
-from src.utils.config import DEVICE, SEED
-from src.data.dataset import create_detection_dataloaders
-from src.utils.model import load_checkpoint
-from src.bin.train_detector import (
-    val_loop,
-    S,
-    B,
-    DS_PATH,
-    IOU_THR,
-    OBJ_THR,
-    DETECTOR_CKPT_PATH,
-    BACKBONE_MODE
-)
+import numpy as np
 import torch
 
+from src.bin.train_detector import (
+    DETECTOR_CKPT_PATH,
+    DS_PATH,
+    IOU_THR,
+    MODE,
+    OBJ_THR,
+    B,
+    S,
+)
+from src.data.dataset import create_detection_datasets
+from src.model.detector import YOLOv1Detector
+from src.utils.config import DEVICE, SEED
+from src.utils.model import create_backbone, create_pre_head, load_checkpoint
+from src.visualization import plot_yolo_labels
+import random
 
 torch.manual_seed(SEED)
+random.seed(SEED)
+
+
+def detect(
+    model: YOLOv1Detector,
+    images: list[torch.Tensor],
+    iou_threshold: float,
+    obj_threshold: float,
+    id2label: dict[int, str],
+    device: str = "cpu",
+):
+    model.eval()
+    images_tensor = torch.stack(images).to(device)
+    all_pred_boxes = model.inference(images_tensor)
+    all_pred_boxes = model.perform_nms(all_pred_boxes, iou_threshold, obj_threshold)
+    for img, pred_boxes in zip(images, all_pred_boxes):
+        nms_boxes = torch.tensor(pred_boxes).numpy()
+        img = (img.permute(1, 2, 0).to("cpu").numpy() * 255).astype(np.uint8)
+        class_ids = nms_boxes[:, 0].astype(np.int64)
+        obj_scores = nms_boxes[:, 1]
+        obj_scores = np.clip(obj_scores, 0, 1)
+        boxes_xywhn = nms_boxes[:, 2:]
+        plot_yolo_labels(img, boxes_xywhn, class_ids, obj_scores, plot=True, id2label=id2label)
 
 
 def main():
-    train_dl, val_dl, test_dl = create_detection_dataloaders(
-        S=S, 
-        B=B, 
-        dataset_path=DS_PATH, 
-        batch_size=128, 
-        num_workers=2, 
-        drop_last=True, 
-        pin_memory=True
-    )
-    C = train_dl.dataset.C
-    backbone = create_backbone(BACKBONE_MODE)
-    head = create_detection_head(S, C, B, BACKBONE_MODE, backbone.out_channels)
-    model = YOLOv1Detector(S=S, B=B, C=C, backbone=backbone, head=head).to(DEVICE)
-    loss_fn = YoloV1Loss(C=C, B=B)
+    _, _, test_ds = create_detection_datasets(dataset_path=DS_PATH, S=S, B=B)
+    C = test_ds.C
+    backbone = create_backbone(MODE)
+    pre_head = create_pre_head(MODE)
+    model = YOLOv1Detector(S=S, B=B, C=C, backbone=backbone, pre_head=pre_head).to(DEVICE)
     load_checkpoint(DETECTOR_CKPT_PATH, model)
-
-
-    metrics = val_loop(
+    images = []
+    for i in range(8):
+        idx = random.randint(0, len(test_ds))
+        img, annot = test_ds[idx]
+        images.append(img)
+    detect(
         model,
-        test_dl,
-        loss_fn,
+        images=images,
         iou_threshold=IOU_THR,
-        objectness_threshold=OBJ_THR,
-        n_plot=1,
-        device=DEVICE
+        obj_threshold=OBJ_THR,
+        id2label=test_ds.id2label,
+        device=DEVICE,
     )
-    print(f"test/loss: {metrics['loss']:.2f}, test/MAP: {metrics['MAP']:.2f}")
 
 
 if __name__ == "__main__":

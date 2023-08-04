@@ -1,6 +1,6 @@
 from typing import Literal, Optional, Callable, Any
 import torch
-import torch.utils.data
+from torch.utils.data import Dataset, DataLoader
 import glob
 from src.utils.utils import read_text_file
 import numpy as np
@@ -8,7 +8,7 @@ from PIL import Image
 from pathlib import Path
 import torchvision.datasets
 import albumentations as A
-from torch.utils.data import DataLoader
+from .transforms import TRAIN_TRANSFORMS, INFERENCE_TRANSFORMS
 
 
 class BaseDataset(torchvision.datasets.VisionDataset):
@@ -95,17 +95,14 @@ class DetectionDataset(BaseDataset):
         for (j, i), xywh, label in zip(boxes_ji.tolist(), boxes_xywh_cell, labels):
             if annots_matrix[i, j, self.C] == 0:  # first object
                 annots_matrix[i, j, self.C] = 1
-
                 # box coords
                 annots_matrix[i, j, self.C + 1 : self.C + 5] = xywh
                 # one hot class label
                 annots_matrix[i, j, int(label)] = 1
-
-        image = torch.Tensor(image).permute(2, 0, 1) / 255
         return image, annots_matrix
 
 
-class ClassificationDataset(torch.utils.data.Dataset):
+class ClassificationDataset(Dataset):
     def __init__(
         self,
         root: str,
@@ -146,38 +143,39 @@ class ClassificationDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             transformed = self.transform(image=image)
             image = transformed["image"]
-
-        image = torch.Tensor(image).permute(2, 0, 1) / 255
         return image, int(label[0])
 
     def __len__(self):
         return len(self._label_files)
 
 
-def create_detection_dataloaders(S: int, B: int, dataset_path: str, **dataloader_kwargs):
-    transform = A.Compose(
-        [A.Resize(448, 448)],
-        bbox_params=A.BboxParams(format="yolo", label_fields=["labels"]),
-    )
-    train_ds = DetectionDataset(S, B, dataset_path, "train", transform)
-    val_ds = DetectionDataset(S, B, dataset_path, "val", transform)
-    test_ds = DetectionDataset(S, B, dataset_path, "test", transform)
+def create_detection_datasets(S: int, B: int, dataset_path: str) -> tuple[DetectionDataset, ...]:
+    bbox_params = A.BboxParams(format="yolo", min_visibility=0.0, label_fields=["labels"])
 
-    train_dl = DataLoader(dataset=train_ds, shuffle=True, **dataloader_kwargs)
-    val_dl = DataLoader(dataset=val_ds, shuffle=False, **dataloader_kwargs)
-    test_dl = DataLoader(dataset=test_ds, shuffle=False, **dataloader_kwargs)
+    train_transform = A.Compose(TRAIN_TRANSFORMS, bbox_params=bbox_params)
+    inference_transform = A.Compose(INFERENCE_TRANSFORMS, bbox_params=bbox_params)
 
-    return train_dl, val_dl, test_dl
+    train_ds = DetectionDataset(S, B, dataset_path, "train", train_transform)
+    val_ds = DetectionDataset(S, B, dataset_path, "val", inference_transform)
+    test_ds = DetectionDataset(S, B, dataset_path, "test", inference_transform)
+    return train_ds, val_ds, test_ds
 
 
-def create_classification_dataloaders(dataset_path: str, **dataloader_kwargs):
-    transform = A.Compose(
-        [A.Resize(112, 112)],
-    )
-    train_ds = ClassificationDataset(dataset_path, "train", transform)
-    val_ds = ClassificationDataset(dataset_path, "val", transform)
+def create_classification_datasets(dataset_path: str) -> tuple[ClassificationDataset, ...]:
+    train_transform = A.Compose(TRAIN_TRANSFORMS)
+    inference_transform = A.Compose(INFERENCE_TRANSFORMS)
 
-    train_dl = DataLoader(dataset=train_ds, shuffle=True, **dataloader_kwargs)
-    val_dl = DataLoader(dataset=val_ds, shuffle=False, **dataloader_kwargs)
+    train_ds = ClassificationDataset(dataset_path, "train", train_transform)
+    val_ds = ClassificationDataset(dataset_path, "val", inference_transform)
+    return train_ds, val_ds
 
+
+def parse_datasets_to_dataloaders(
+    train_ds: Dataset, val_ds: Dataset, test_ds: Dataset | None = None, **kwargs
+) -> tuple[DataLoader, ...]:
+    train_dl = DataLoader(dataset=train_ds, shuffle=True, **kwargs)
+    val_dl = DataLoader(dataset=val_ds, shuffle=False, **kwargs)
+    if test_ds is not None:
+        test_dl = DataLoader(dataset=test_ds, shuffle=False, **kwargs)
+        return train_dl, val_dl, test_dl
     return train_dl, val_dl
