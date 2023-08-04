@@ -3,7 +3,7 @@ from src.data.dataset import create_classification_datasets, parse_datasets_to_d
 from src.utils.config import DATA_PATH, ROOT, DEVICE, SEED
 from src.utils.utils import train_loop, merge_dicts, display_metrics
 from src.utils.model import save_checkpoint, load_checkpoint, create_backbone
-from src.utils.pylogger import get_pylogger
+from src.logging.pylogger import get_pylogger
 
 from torchmetrics.functional import accuracy
 import torch.optim as optim

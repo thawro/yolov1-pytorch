@@ -96,6 +96,7 @@ def plot_bbox(
         _type_: _description_
     """
     lw = lw or max(round(sum(image.shape) / 2 * 0.003), 2)  # line width
+    fw = max(lw - 1, 1)  # font thickness
     x_min, y_min, x_max, y_max = bbox_xyxy
     if confidence is not None:
         txt_label = f"{class_name} {confidence:.1f}"
@@ -103,8 +104,8 @@ def plot_bbox(
         txt_label = class_name
     p1, p2 = (x_min, y_min), (x_max, y_max)
     cv2.rectangle(image, p1, p2, color, thickness=lw, lineType=cv2.LINE_AA)
-    tf = max(lw - 1, 1)  # font thickness
-    w, h = cv2.getTextSize(txt_label, 0, fontScale=lw / 3, thickness=tf)[0]  # text width, height
+
+    w, h = cv2.getTextSize(txt_label, 0, fontScale=lw / 3, thickness=fw)[0]  # text width, height
     outside = p1[1] - h >= 3
     p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
     cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
@@ -115,7 +116,7 @@ def plot_bbox(
         0,
         lw / 3,
         txt_color,
-        thickness=tf,
+        thickness=fw,
         lineType=cv2.LINE_AA,
     )
     return image
@@ -125,7 +126,7 @@ def plot_yolo_labels(
     image: np.ndarray,
     bboxes_xywhn: np.ndarray,
     class_ids: np.ndarray,
-    confidences: np.ndarray | None = None,
+    confidences: np.ndarray | None | list = None,
     id2label: dict[int, str] | None = None,
     plot: bool = False,
 ) -> np.ndarray:

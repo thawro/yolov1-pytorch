@@ -12,7 +12,7 @@ from typing import Literal
 from PIL import Image
 from tqdm.auto import tqdm
 import glob
-from src.utils.pylogger import get_pylogger
+from src.logging.pylogger import get_pylogger
 
 log = get_pylogger(__name__)
 

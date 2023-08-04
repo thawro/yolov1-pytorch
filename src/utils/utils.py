@@ -1,6 +1,6 @@
 from tqdm import tqdm
 import urllib.request
-from .pylogger import get_pylogger
+from ..logging.pylogger import get_pylogger
 from typing import Any
 import torch
 from torch import nn

@@ -191,6 +191,17 @@ files = [
 ]
 
 [[package]]
+name = "ansicon"
+version = "1.89.0"
+description = "Python wrapper for loading Jason Hood's ANSICON"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ansicon-1.89.0-py2.py3-none-any.whl", hash = "sha256:f1def52d17f65c2c9682cf8370c03f541f410c1752d6a14029f97318e4b9dfec"},
+    {file = "ansicon-1.89.0.tar.gz", hash = "sha256:e4d039def5768a47e4afec8e89e83ec3ae5a26bf00ad851f914d1240b444d2b1"},
+]
+
+[[package]]
 name = "anyio"
 version = "3.7.1"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
@@ -347,6 +358,22 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.7.4)"]
 jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
+name = "blessed"
+version = "1.20.0"
+description = "Easy, practical library for making terminal apps, by providing an elegant, well-documented interface to Colors, Keyboard input, and screen Positioning capabilities."
+optional = false
+python-versions = ">=2.7"
+files = [
+    {file = "blessed-1.20.0-py2.py3-none-any.whl", hash = "sha256:0c542922586a265e699188e52d5f5ac5ec0dd517e5a1041d90d2bbf23f906058"},
+    {file = "blessed-1.20.0.tar.gz", hash = "sha256:2cdd67f8746e048f00df47a2880f4d6acbcdb399031b604e34ba8f71d5787680"},
+]
+
+[package.dependencies]
+jinxed = {version = ">=1.1.0", markers = "platform_system == \"Windows\""}
+six = ">=1.9.0"
+wcwidth = ">=0.1.4"
 
 [[package]]
 name = "certifi"
@@ -1135,6 +1162,35 @@ files = [
 gitdb = ">=4.0.1,<5"
 
 [[package]]
+name = "gpustat"
+version = "1.1"
+description = "An utility to monitor NVIDIA GPU status and usage"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "gpustat-1.1.tar.gz", hash = "sha256:c8fc105404aac11884f70ed2fa06cfd210d3cd389ccae4a9bc38579c72460cee"},
+]
+
+[package.dependencies]
+blessed = ">=1.17.1"
+nvidia-ml-py = ">=11.450.129"
+psutil = ">=5.6.0"
+
+[package.extras]
+completion = ["shtab"]
+test = ["mockito (>=1.2.1)", "pytest (>=5.4.1)", "pytest-runner"]
+
+[[package]]
+name = "gputil"
+version = "1.4.0"
+description = "GPUtil is a Python module for getting the GPU status from NVIDA GPUs using nvidia-smi."
+optional = false
+python-versions = "*"
+files = [
+    {file = "GPUtil-1.4.0.tar.gz", hash = "sha256:099e52c65e512cdfa8c8763fca67f5a5c2afb63469602d5dcb4d296b3661efb9"},
+]
+
+[[package]]
 name = "gradio"
 version = "3.39.0"
 description = "Python library for easily interacting with trained machine learning models"
@@ -1528,6 +1584,20 @@ MarkupSafe = ">=2.0"
 
 [package.extras]
 i18n = ["Babel (>=2.7)"]
+
+[[package]]
+name = "jinxed"
+version = "1.2.0"
+description = "Jinxed Terminal Library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "jinxed-1.2.0-py2.py3-none-any.whl", hash = "sha256:cfc2b2e4e3b4326954d546ba6d6b9a7a796ddcb0aef8d03161d005177eb0d48b"},
+    {file = "jinxed-1.2.0.tar.gz", hash = "sha256:032acda92d5c57cd216033cbbd53de731e6ed50deb63eb4781336ca55f72cda5"},
+]
+
+[package.dependencies]
+ansicon = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "joblib"
@@ -2259,6 +2329,17 @@ files = [
     {file = "numpy-1.25.1-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0d3fe3dd0506a28493d82dc3cf254be8cd0d26f4008a417385cbf1ae95b54004"},
     {file = "numpy-1.25.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:012097b5b0d00a11070e8f2e261128c44157a8689f7dedcf35576e525893f4fe"},
     {file = "numpy-1.25.1.tar.gz", hash = "sha256:9a3a9f3a61480cc086117b426a8bd86869c213fc4072e606f01c4e4b66eb92bf"},
+]
+
+[[package]]
+name = "nvidia-ml-py"
+version = "12.535.77"
+description = "Python Bindings for the NVIDIA Management Library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "nvidia-ml-py-12.535.77.tar.gz", hash = "sha256:8d81e5ed993c84006454102af84c4bffdf72ba5c51212b6c0121c65688983e14"},
+    {file = "nvidia_ml_py-12.535.77-py3-none-any.whl", hash = "sha256:ae246ec810a05438375ce345e35171bc3f4a906487e9ea2632473d7e4f4bd375"},
 ]
 
 [[package]]
@@ -5107,4 +5188,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "f413db91ae0e8ffda0db58c368d9f002efb9fd7a69b756252d1fb1343a7233b8"
+content-hash = "fbc1b095cfd53fe3eee6914c327ab5af9d08737fb73343aa4117c9249d6e262c"
