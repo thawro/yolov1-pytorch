@@ -9,6 +9,7 @@ from src.model.backbones import (
 from typing import Literal, Any
 
 from ..logging.pylogger import get_pylogger
+import os
 
 log = get_pylogger(__name__)
 
@@ -24,13 +25,14 @@ def load_checkpoint(
     optimizer: torch.optim.Optimizer | None = None,
     scheduler: torch.optim.lr_scheduler.LRScheduler | None = None,
 ):
-    ckpt = torch.load(path)
     log.info(f"Loading checkpoint from {path}")
+    ckpt = torch.load(path)
     model.load_state_dict(ckpt["model"])
     if optimizer is not None and "optimizer" in ckpt:
         optimizer.load_state_dict(ckpt["optimizer"])
     if scheduler is not None and "scheduler" in ckpt:
         scheduler.load_state_dict(ckpt["scheduler"])
+    return ckpt
 
 
 def create_backbone(mode: Literal["yolov1", "yolov1-tiny"]):

@@ -101,10 +101,3 @@ class GPUMonitor(BaseMonitor):
     @property
     def utilization(self) -> float:
         return self.gpu.load * 100
-
-
-cpu_monitor = CPUMonitor()
-gpu_monitor = GPUMonitor()
-
-print(cpu_monitor.info())
-print(gpu_monitor.info())

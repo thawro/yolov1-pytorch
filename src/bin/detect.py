@@ -2,7 +2,6 @@ import numpy as np
 import torch
 
 from src.bin.train_detector import (
-    DETECTOR_CKPT_PATH,
     DS_PATH,
     IOU_THR,
     MODE,
@@ -12,11 +11,12 @@ from src.bin.train_detector import (
 )
 from src.data.dataset import create_detection_datasets
 from src.model.detector import YOLOv1Detector
-from src.utils.config import DEVICE, SEED
+from src.utils.config import DEVICE, SEED, ROOT
 from src.utils.model import create_backbone, create_pre_head, load_checkpoint
 from src.visualization import plot_yolo_labels
 import random
 
+DETECTOR_CKPT_PATH = str(ROOT / "logs/detector/yolo_HWD+__yolov1-tiny/checkpoints/best.pt")
 torch.manual_seed(SEED)
 random.seed(SEED)
 

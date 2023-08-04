@@ -24,13 +24,24 @@ class YOLOv1DetectionHead(nn.Module):
 
 
 class YOLOv1Detector(nn.Module):
-    def __init__(self, S: int, C: int, B: int, backbone: Backbone, pre_head: Backbone):
+    def __init__(
+        self,
+        S: int,
+        C: int,
+        B: int,
+        backbone: Backbone,
+        pre_head: Backbone,
+        iou_threshold: float = 0.5,
+        obj_threshold: float = 0.4,
+    ):
         self.S = S
         self.C = C
         self.B = B
         super().__init__()
         self.backbone = backbone
         self.pre_head = pre_head
+        self.iou_threshold = iou_threshold
+        self.obj_threshold = obj_threshold
         self.head = YOLOv1DetectionHead(pre_head.out_channels, S, C, B, mid_features=2048)
 
     def forward(self, x: torch.Tensor):
@@ -44,6 +55,9 @@ class YOLOv1Detector(nn.Module):
         out[..., : self.C][..., 2::5] = F.sigmoid(out[..., : self.C][..., 2::5])
         return out
 
+    def cellboxes_to_boxes(self, cell_boxes):
+        return cellboxes_to_boxes(cell_boxes, self.S, self.C, self.B)
+
     def inference(self, x: torch.Tensor):
         """
         cell_boxes shape: [batch_size, S, S, C + B * 5]
@@ -51,21 +65,21 @@ class YOLOv1Detector(nn.Module):
         best_class, objectness, x, y, w, h
         """
         cell_boxes = self(x).to("cpu")
-        boxes_preds = cellboxes_to_boxes(cell_boxes, self.S, self.C, self.B)
+        boxes_preds = self.cellboxes_to_boxes(cell_boxes)
         return boxes_preds
 
     def perform_nms(
         self,
         boxes_preds: torch.Tensor,
-        iou_threshold: float = 0.5,
-        objectness_threshold: float = 0.4,
+        iou_threshold: float | None = None,
+        obj_threshold: float | None = None,
     ):
         all_nms_boxes = []
         for i, boxes in enumerate(boxes_preds):
             nms_boxes = NMS(
                 boxes,
-                iou_threshold=iou_threshold,
-                objectness_threshold=objectness_threshold,
+                iou_threshold=iou_threshold or self.iou_threshold,
+                objectness_threshold=obj_threshold or self.obj_threshold,
             )
             all_nms_boxes.append(nms_boxes)
         return all_nms_boxes

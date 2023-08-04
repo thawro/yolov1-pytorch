@@ -179,3 +179,53 @@ def parse_datasets_to_dataloaders(
         test_dl = DataLoader(dataset=test_ds, shuffle=False, **kwargs)
         return train_dl, val_dl, test_dl
     return train_dl, val_dl
+
+
+class DataModule:
+    def __init__(
+        self,
+        train_ds: Dataset,
+        val_ds: Dataset,
+        test_ds: Dataset | None,
+        batch_size: int,
+        num_workers: int,
+        pin_memory: bool = True,
+        drop_last: bool = True,
+    ):
+        self.train_ds = train_ds
+        self.val_ds = val_ds
+        self.test_ds = test_ds
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.drop_last = drop_last
+
+    def train_dataloader(self):
+        return DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            drop_last=self.drop_last,
+        )
+
+    def val_dataloader(self):
+        return DataLoader(
+            self.val_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            drop_last=self.drop_last,
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            drop_last=self.drop_last,
+        )
