@@ -1,6 +1,6 @@
 from src.model.detector import YOLOv1Detector
 from src.model.loss import YoloV1Loss
-from src.utils.config import DATA_PATH, ROOT, DEVICE, SEED
+from src.utils.config import DATA_PATH, ROOT, DEVICE, SEED, NOW
 
 from src.data.dataset import create_detection_datasets, DataModule
 from src.model.module import DetectionModelModule
@@ -10,7 +10,7 @@ from src.utils.model import (
     create_backbone,
     create_pre_head,
 )
-from src.logging.loggers import BaseLogger, MLFlowLogger
+from src.logging.loggers import MLFlowLogger
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.optim import Adam
 import torch.utils.data
@@ -19,56 +19,84 @@ import torch
 
 torch.manual_seed(SEED)
 
-MODE = "yolov1-tiny"
-DS_NAME = "yolo_HWD+"
-CLASSIFIER_DS_NAME = "HWD+"
-# DS_NAME = "VOC"
-DS_PATH = str(DATA_PATH / DS_NAME)
+CONFIG = {
+    "dataset": "yolo_HWD+",
+    "backbone": "yolov1-tiny",
+    "experiment_name": "detector",
+    "tracking_uri": "http://0.0.0.0:5000",
+    "load_classifier_backbone_weights": True,
+    "load_weights": False,
+    "epochs": 50,
+    "limit_batches": 5,
+    "seed": SEED,
+    "device": DEVICE,
+    "model": {
+        "S": 7,
+        "B": 2,
+        "iou_threshold": 0.5,
+        "objectness_threshold": 0.4,
+    },
+    "dataloader": {
+        "batch_size": 16,
+        "num_workers": 2,
+        "drop_last": True,
+        "pin_memory": True,
+    },
+    "optimizer": {
+        "lr": 5e-4,
+        "weight_decay": 5e-4,
+    },
+    "scheduler": {
+        "milestones": [10, 20, 30],
+        "gamma": 0.5,
+    },
+}
 
-LOAD_CLASSIFIER_BACKBONE_WEIGHTS = False
-LOAD_WEIGHTS = "last"
+CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}"
 
-EXPERIMENT_NAME = "detector"
-RUN_NAME = f"{DS_NAME}__{MODE}"
-LOGS_PATH = ROOT / "logs" / EXPERIMENT_NAME / RUN_NAME
+DS_PATH = str(DATA_PATH / CONFIG["dataset"])
 
+LOGS_PATH = ROOT / "results" / CONFIG["experiment_name"] / f"{CONFIG['run_name']}____{NOW}"
+
+CLASSIFIER_RUN_NAME = "HWD+__yolov1-tiny__06-08-2023_11:22:32"
 CLASSIFIER_BACKBONE_CKPT_PATH = str(
-    ROOT / f"logs/classifier/{CLASSIFIER_DS_NAME}__{MODE}/checkpoints/backbone_best.pt"
+    ROOT / f"results/classifier/{CLASSIFIER_RUN_NAME}/checkpoints/backbone_best.pt"
 )
-
-S = 7
-B = 2
-IOU_THR = 0.5
-OBJ_THR = 0.4
-DL_PARAMS = dict(batch_size=16, num_workers=2, drop_last=True, pin_memory=True)
-
-EPOCHS = 100
-LIMIT_BATCHES = -1
 
 
 def main():
-    train_ds, val_ds, test_ds = create_detection_datasets(S=S, B=B, dataset_path=DS_PATH)
-    datamodule = DataModule(train_ds, val_ds, test_ds, **DL_PARAMS)
+    train_ds, val_ds, test_ds = create_detection_datasets(
+        S=CONFIG["model"]["S"], B=CONFIG["model"]["B"], dataset_path=DS_PATH
+    )
+    datamodule = DataModule(train_ds, val_ds, test_ds, **CONFIG["dataloader"])
+    CONFIG["model"]["C"] = train_ds.C
 
-    C = train_ds.C
-    backbone = create_backbone(MODE)
-    pre_head = create_pre_head(MODE)
+    backbone = create_backbone(CONFIG["backbone"])
+    pre_head = create_pre_head(CONFIG["backbone"])
     model = YOLOv1Detector(
-        S=S,
-        B=B,
-        C=C,
+        S=CONFIG["model"]["S"],
+        B=CONFIG["model"]["B"],
+        C=CONFIG["model"]["C"],
         backbone=backbone,
         pre_head=pre_head,
-        iou_threshold=IOU_THR,
-        obj_threshold=OBJ_THR,
-    ).to(DEVICE)
-    if LOAD_CLASSIFIER_BACKBONE_WEIGHTS:
+        iou_threshold=CONFIG["model"]["iou_threshold"],
+        obj_threshold=CONFIG["model"]["objectness_threshold"],
+    )
+
+    if CONFIG["load_classifier_backbone_weights"]:
         load_checkpoint(CLASSIFIER_BACKBONE_CKPT_PATH, model.backbone)
 
-    optimizer = Adam(model.parameters(), lr=5e-4, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[10, 20, 30], gamma=0.5)
-    loss_fn = YoloV1Loss(C=C, B=B)
-    logger = BaseLogger(str(LOGS_PATH))
+    optimizer = Adam(model.parameters(), **CONFIG["optimizer"])
+    scheduler = MultiStepLR(optimizer, **CONFIG["scheduler"])
+    loss_fn = YoloV1Loss(C=CONFIG["model"]["C"], B=CONFIG["model"]["B"])
+
+    logger = MLFlowLogger(
+        log_path=LOGS_PATH,
+        config=CONFIG,
+        experiment_name=CONFIG["experiment_name"],
+        tracking_uri=CONFIG["tracking_uri"],
+        run_name=CONFIG["run_name"],
+    )
 
     module = DetectionModelModule(
         model=model,
@@ -77,11 +105,11 @@ def main():
         optimizer=optimizer,
         scheduler=scheduler,
         logger=logger,
-        limit_batches=LIMIT_BATCHES,
+        limit_batches=CONFIG["limit_batches"],
         device=DEVICE,
     )
 
-    module.fit(epochs=EPOCHS, load_weights=LOAD_WEIGHTS)
+    module.fit(epochs=CONFIG["epochs"], load_weights=CONFIG["load_weights"])
 
 
 if __name__ == "__main__":

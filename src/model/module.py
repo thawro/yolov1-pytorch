@@ -13,7 +13,6 @@ from src.logging.loggers import BaseLogger
 from typing import Literal
 
 
-# TODO: add logger calls
 class BaseModelModule:
     input_names: list[str] = ["image"]
     output_names: list[str] = ["output"]
@@ -29,7 +28,7 @@ class BaseModelModule:
         limit_batches: int = -1,
         device: str = "cpu",
     ):
-        self.model = model
+        self.model = model.to(device)
         self.datamodule = datamodule
         self.loss_fn = loss_fn
         self.optimizer = optimizer

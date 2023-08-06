@@ -130,7 +130,6 @@ class MLFlowLogger(BaseLogger):
         mlflow.set_tracking_uri(tracking_uri)
         self.tracking_uri = tracking_uri
         experiment = mlflow.set_experiment(experiment_name=experiment_name)
-        print("STARTIGN RUN")
         mlflow.start_run(
             run_id=run_id,
             experiment_id=experiment.experiment_id,

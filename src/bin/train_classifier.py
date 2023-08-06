@@ -20,22 +20,22 @@ torch.manual_seed(SEED)
 CONFIG = {
     "dataset": "HWD+",
     "backbone": "yolov1-tiny",
-    "experiment_name": "classifier-2",
+    "experiment_name": "classifier",
     "tracking_uri": "http://0.0.0.0:5000",
     "load_weights": False,
-    "epochs": 20,
-    "limit_batches": 5,
+    "epochs": 50,
+    "limit_batches": -1,
     "seed": SEED,
     "device": DEVICE,
     "dataloader": {"batch_size": 32, "num_workers": 8, "drop_last": True, "pin_memory": True},
     "optimizer": {"lr": 2e-5, "weight_decay": 1e-4},
 }
 
-CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}__{NOW}"
+CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}"
 
 DS_PATH = str(DATA_PATH / CONFIG["dataset"])
 
-LOGS_PATH = ROOT / "results" / CONFIG["experiment_name"] / CONFIG["run_name"]
+LOGS_PATH = ROOT / "results" / CONFIG["experiment_name"] / f"{CONFIG['run_name']}____{NOW}"
 
 
 def main():
@@ -49,7 +49,7 @@ def main():
     model = YOLOv1Classifier(num_classes=num_classes, backbone=backbone).to(DEVICE)
     optimizer = optim.Adam(model.parameters(), **CONFIG["optimizer"])
     loss_fn = nn.CrossEntropyLoss()
-    # logger = BaseLogger(LOGS_PATH)
+
     logger = MLFlowLogger(
         log_path=LOGS_PATH,
         config=CONFIG,

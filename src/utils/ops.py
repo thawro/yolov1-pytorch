@@ -197,7 +197,7 @@ def MAP(
         precisions = torch.cat((torch.tensor([1]), precisions))
         recalls = torch.cat((torch.tensor([0]), recalls))
         # torch.trapz for numerical integration
-        average_precisions.append(torch.trapz(precisions, recalls))
+        average_precisions.append(torch.trapz(precisions, recalls).item())
 
     return sum(average_precisions) / len(average_precisions)
 
