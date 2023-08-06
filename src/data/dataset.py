@@ -21,21 +21,22 @@ class BaseDataset(torchvision.datasets.VisionDataset):
     ):
         super().__init__(root, transform=transform, target_transform=target_transform)
         self.split = split
-        self._init_paths()
-
+        self._init_dirpaths()
+        self._init_filepaths()
         self.labels = read_text_file(f"{root}/labels.txt")
 
+    def _init_dirpaths(self):
+        self.root = Path(self.root)
+        self.labels_path = self.root / "labels" / self.split
+        self.images_path = self.root / "images" / self.split
+
+    def _init_filepaths(self):
         self._image_files = glob.glob(f"{self.images_path}/*")
         ext = self._image_files[0].split(".")[-1]
         self._label_files = [
             img_file.replace("images/", "labels/").replace(f".{ext}", ".txt")
             for img_file in self._image_files
         ]
-
-    def _init_paths(self):
-        self.root = Path(self.root)
-        self.labels_path = self.root / "labels" / self.split
-        self.images_path = self.root / "images" / self.split
 
     def get_raw_data(self, idx: int):
         image_filepath = self._image_files[idx]

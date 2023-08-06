@@ -1,4 +1,10 @@
-"""Parse VOC dataset annotation format from VOC format (xyxy) to YOLO format (xywh)"""
+"""Parse VOC dataset annotation format from VOC format (xyxy) to YOLO format (xywh)
+
+To run this script:
+* Create a `{project_root}/datasets/VOC` directory under the project root path
+* Create a `{project_root}/datasets/VOC/labels.txt` file with label for each object in separate lines
+* Unzip VOC dataset (http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) to `{project_root}/datasets/VOC2012` directory
+"""
 
 import xml.etree.ElementTree as ET
 from src.utils.config import DATA_PATH

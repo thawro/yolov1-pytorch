@@ -6,8 +6,7 @@ import torch
 from torch import nn
 import torch.utils.data
 from datetime import datetime
-
-# datetime object containing current date and time
+from pathlib import Path
 
 log = get_pylogger(__name__)
 
@@ -44,7 +43,7 @@ def save_txt_to_file(txt: str, filename: str):
         file.write(txt)
 
 
-def read_text_file(filename: str) -> list[str]:
+def read_text_file(filename: str | Path) -> list[str]:
     with open(filename, "r") as file:
         lines = file.readlines()
         lines = [line.strip() for line in lines]  # Optional: Remove leading/trailing whitespace
