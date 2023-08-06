@@ -23,9 +23,9 @@ class BaseModelModule:
         model: YOLOv1Classifier | YOLOv1Detector | nn.Module,
         datamodule: DataModule,
         loss_fn: torch.nn.modules.loss._Loss,
+        logger: BaseLogger,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler.LRScheduler | None = None,
-        logger: BaseLogger = BaseLogger("logs"),
         limit_batches: int = -1,
         device: str = "cpu",
     ):
@@ -127,17 +127,22 @@ class BaseModelModule:
         self.epoch += 1
 
     def fit(self, epochs: int, load_weights: bool | Literal["last", "best"]):
-        if load_weights:
-            path: str = getattr(self.logger, f"{load_weights}_ckpt_path")
-            self.load_checkpoint(path)
+        try:
+            if load_weights:
+                path: str = getattr(self.logger, f"{load_weights}_ckpt_path")
+                self.load_checkpoint(path)
 
-        for epoch in range(epochs):
-            train_metrics, val_metrics = self._common_loops()
-            if val_metrics["loss"] < self.best_loss:
-                self.best_loss = val_metrics["loss"]
-                self.save_checkpoint(self.logger.best_ckpt_path)
-            self.save_checkpoint(self.logger.last_ckpt_path)
-            self._epoch_end(train_metrics, val_metrics)
+            for epoch in range(epochs):
+                train_metrics, val_metrics = self._common_loops()
+                if val_metrics["loss"] < self.best_loss:
+                    self.best_loss = val_metrics["loss"]
+                    self.save_checkpoint(self.logger.best_ckpt_path)
+                self.save_checkpoint(self.logger.last_ckpt_path)
+                self._epoch_end(train_metrics, val_metrics)
+            self.logger.log_experiment()
+        except KeyboardInterrupt as e:
+            self.logger.log_experiment()
+            raise e
 
     def export_to_onnx(self, dummy_input: dict[str, torch.Tensor], filepath: str):
         torch.onnx.export(

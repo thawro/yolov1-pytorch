@@ -1,6 +1,5 @@
 import logging
 import colorlog
-from pytorch_lightning.utilities import rank_zero_only
 
 formatter = colorlog.ColoredFormatter(
     "%(asctime)s - %(log_color)s%(levelname)s%(reset)s - %(message)s",
@@ -35,7 +34,7 @@ def get_pylogger(name=__name__) -> logging.Logger:
         "fatal",
         "critical",
     )
-    for level in logging_levels:
-        setattr(logger, level, rank_zero_only(getattr(logger, level)))
+    # for level in logging_levels:
+    #     setattr(logger, level, rank_zero_only(getattr(logger, level)))
 
     return logger

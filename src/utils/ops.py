@@ -1,6 +1,6 @@
 import torch
 from collections import Counter
-from ..logging.pylogger import get_pylogger
+from src.logging.pylogger import get_pylogger
 import numpy as np
 
 log = get_pylogger(__name__)

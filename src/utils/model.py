@@ -8,8 +8,7 @@ from src.model.backbones import (
 )
 from typing import Literal, Any
 
-from ..logging.pylogger import get_pylogger
-import os
+from src.logging.pylogger import get_pylogger
 
 log = get_pylogger(__name__)
 

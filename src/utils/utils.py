@@ -1,10 +1,13 @@
 from tqdm import tqdm
 import urllib.request
-from ..logging.pylogger import get_pylogger
+from src.logging.pylogger import get_pylogger
 from typing import Any
 import torch
 from torch import nn
 import torch.utils.data
+from datetime import datetime
+
+# datetime object containing current date and time
 
 log = get_pylogger(__name__)
 
@@ -86,3 +89,10 @@ def merge_dicts(sep: str = "/", **dict_of_dicts) -> dict[str, Any]:
 def display_metrics(prefix: str, metrics: dict[str, Any]):
     metrics_msg = ",   ".join([f"{name} = {value:.2f}" for name, value in metrics.items()])
     log.info(prefix + metrics_msg)
+
+
+def get_current_date_and_time() -> str:
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d-%m-%Y_%H:%M:%S")
+    return dt_string

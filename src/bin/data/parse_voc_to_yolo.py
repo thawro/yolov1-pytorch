@@ -10,8 +10,8 @@ import shutil
 
 def xyxy2xywh(box: tuple[float, float, float, float], img_w: int, img_h: int):
     """Convert x_min, y_min, x_max, y_max to x_c, y_c, w, h"""
-    x_c = (box[0] + box[2])/2.0 - 1
-    y_c = (box[1] + box[3])/2.0 - 1
+    x_c = (box[0] + box[2]) / 2.0 - 1
+    y_c = (box[1] + box[3]) / 2.0 - 1
     w = box[2] - box[0]
     h = box[3] - box[1]
     x_c /= img_w
@@ -19,6 +19,7 @@ def xyxy2xywh(box: tuple[float, float, float, float], img_w: int, img_h: int):
     y_c /= img_h
     h /= img_h
     return x_c, y_c, w, h
+
 
 def parse_annotation_voc_to_yolo(filepath: str, labels: list[str]):
     """Parse annotation from VOC format (.xml) to YOLO format (.txt)
@@ -31,20 +32,22 @@ def parse_annotation_voc_to_yolo(filepath: str, labels: list[str]):
     """
     tree = ET.parse(filepath)
     root = tree.getroot()
-    size = root.find('size')
-    img_w = int(size.find('width').text)
-    img_h = int(size.find('height').text)
+    size = root.find("size")
+    img_w = int(size.find("width").text)
+    img_h = int(size.find("height").text)
 
     annots = []
-    for obj in root.iter('object'):
-        difficult = obj.find('difficult').text
-        label = obj.find('name').text
+    for obj in root.iter("object"):
+        difficult = obj.find("difficult").text
+        label = obj.find("name").text
         if label not in labels or int(difficult) == 1:
             continue
         label_id = labels.index(label)
-        xmlbox = obj.find('bndbox')
-        
-        xyxy_box = tuple([float(xmlbox.find(coord).text) for coord in ['xmin', 'ymin', 'xmax', 'ymax']])
+        xmlbox = obj.find("bndbox")
+
+        xyxy_box = tuple(
+            [float(xmlbox.find(coord).text) for coord in ["xmin", "ymin", "xmax", "ymax"]]
+        )
         xywh_box = xyxy2xywh(xyxy_box, img_w, img_h)
         annot = str(label_id) + " " + " ".join([str(val) for val in xywh_box])
         annots.append(annot)

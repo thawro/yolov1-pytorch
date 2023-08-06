@@ -161,7 +161,8 @@ cython_debug/
 
 
 datasets/
-runs/
+mlruns/
+results/
 wandb/
 *.pt
 .vscode/
