@@ -43,7 +43,6 @@ class BaseLogger:
         self.last_ckpt_path = str(self.ckpt_dir / "last.pt")
         self.monitor = Monitor()
         self.results = Results(config=config)
-        self.log_dict(config, "config.yaml")
 
     def log(self, key: str, value: float, step: int | None = None):
         self.results.update_metrics({key: value}, step=step)
@@ -58,10 +57,13 @@ class BaseLogger:
         monitoring_metrics = self.monitor.metrics
         self.log_metrics(monitoring_metrics, step=step)
 
-    def log_dict(self, config: dict[str, Any], filename: str = "config.yaml"):
+    def log_dict(self, dct: dict[str, Any], filename: str = "dct.yaml"):
         path = str(self.log_path / filename)
         with open(path, "w") as yaml_file:
-            yaml.dump(config, yaml_file, default_flow_style=False)
+            yaml.dump(dct, yaml_file, default_flow_style=False)
+
+    def log_config(self):
+        self.log_dict(self.results.config, "config.yaml")
 
     def log_artifact(self, local_path: str, artifact_path: str | None = None):
         pass
@@ -164,6 +166,22 @@ class MLFlowLogger(BaseLogger):
 
     def log_artifact(self, local_path: str, artifact_path: str | None = None):
         mlflow.log_artifact(local_path, artifact_path)
+
+    def download_artifact(
+        self,
+        artifact_path: str,
+        run_id: str | None = None,
+    ) -> str:
+        """Download artifact from mlflow and store it in dst_path (relative to log dir) directory
+        Returns path to the downloaded artifact
+        """
+        dst_path = str(self.log_path / "loaded")
+        if run_id is None:
+            run_id = self.run_id
+        log.info(f"Downloading {artifact_path} from mlflow run {self.run_id} to {dst_path}")
+        return mlflow.artifacts.download_artifacts(
+            run_id=run_id, artifact_path=artifact_path, dst_path=dst_path
+        )
 
     def finalize(self):
         super().finalize()

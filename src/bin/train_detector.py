@@ -22,34 +22,18 @@ torch.manual_seed(SEED)
 CONFIG = {
     "dataset": "yolo_HWD+",
     "backbone": "yolov1-tiny",
+    "classifier_run_id": "ee7d8a16f58140a8ae5e33dc98b08835",
+    "run_id": None,
     "experiment_name": "detector",
     "tracking_uri": "http://0.0.0.0:5000",
-    "load_classifier_backbone_weights": True,
-    "load_weights": False,
     "epochs": 50,
     "limit_batches": 5,
     "seed": SEED,
     "device": DEVICE,
-    "model": {
-        "S": 7,
-        "B": 2,
-        "iou_threshold": 0.5,
-        "objectness_threshold": 0.4,
-    },
-    "dataloader": {
-        "batch_size": 16,
-        "num_workers": 2,
-        "drop_last": True,
-        "pin_memory": True,
-    },
-    "optimizer": {
-        "lr": 5e-4,
-        "weight_decay": 5e-4,
-    },
-    "scheduler": {
-        "milestones": [10, 20, 30],
-        "gamma": 0.5,
-    },
+    "model": {"S": 7, "B": 2, "iou_threshold": 0.5, "objectness_threshold": 0.4},
+    "dataloader": {"batch_size": 16, "num_workers": 2, "drop_last": True, "pin_memory": True},
+    "optimizer": {"lr": 5e-4, "weight_decay": 5e-4},
+    "scheduler": {"milestones": [10, 20, 30], "gamma": 0.5},
 }
 
 CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}"
@@ -73,6 +57,7 @@ def main():
 
     backbone = create_backbone(CONFIG["backbone"])
     pre_head = create_pre_head(CONFIG["backbone"])
+
     model = YOLOv1Detector(
         S=CONFIG["model"]["S"],
         B=CONFIG["model"]["B"],
@@ -83,9 +68,6 @@ def main():
         obj_threshold=CONFIG["model"]["objectness_threshold"],
     )
 
-    if CONFIG["load_classifier_backbone_weights"]:
-        load_checkpoint(CLASSIFIER_BACKBONE_CKPT_PATH, model.backbone)
-
     optimizer = Adam(model.parameters(), **CONFIG["optimizer"])
     scheduler = MultiStepLR(optimizer, **CONFIG["scheduler"])
     loss_fn = YoloV1Loss(C=CONFIG["model"]["C"], B=CONFIG["model"]["B"])
@@ -95,8 +77,16 @@ def main():
         config=CONFIG,
         experiment_name=CONFIG["experiment_name"],
         tracking_uri=CONFIG["tracking_uri"],
+        run_id=CONFIG["run_id"],
         run_name=CONFIG["run_name"],
     )
+
+    if CONFIG["classifier_run_id"] is not None:
+        ckpt_path = logger.download_artifact(
+            artifact_path="checkpoints/backbone_best.pt",
+            run_id=CONFIG["classifier_run_id"],
+        )
+        load_checkpoint(ckpt_path, model.backbone)
 
     module = DetectionModelModule(
         model=model,
@@ -108,8 +98,12 @@ def main():
         limit_batches=CONFIG["limit_batches"],
         device=DEVICE,
     )
+    if CONFIG["run_id"] is not None:  # resuming training
+        CONFIG["ckpt"] = logger.download_artifact(artifact_path="checkpoints/last.pt")
+    else:
+        CONFIG["ckpt"] = None
 
-    module.fit(epochs=CONFIG["epochs"], load_weights=CONFIG["load_weights"])
+    module.fit(epochs=CONFIG["epochs"], ckpt_path=CONFIG["ckpt"])
 
 
 if __name__ == "__main__":

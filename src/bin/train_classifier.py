@@ -20,10 +20,10 @@ torch.manual_seed(SEED)
 CONFIG = {
     "dataset": "HWD+",
     "backbone": "yolov1-tiny",
+    "run_id": None,  # run_id used to resume training
     "experiment_name": "classifier",
     "tracking_uri": "http://0.0.0.0:5000",
-    "load_weights": False,
-    "epochs": 50,
+    "epochs": 20,
     "limit_batches": -1,
     "seed": SEED,
     "device": DEVICE,
@@ -35,7 +35,7 @@ CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}"
 
 DS_PATH = str(DATA_PATH / CONFIG["dataset"])
 
-LOGS_PATH = ROOT / "results" / CONFIG["experiment_name"] / f"{CONFIG['run_name']}____{NOW}"
+LOGS_PATH = ROOT / "results" / CONFIG["experiment_name"] / f"{CONFIG['run_name']}__{NOW}"
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
     datamodule = DataModule(train_ds, val_ds, None, **CONFIG["dataloader"])
     num_classes = len(train_ds.labels)
     backbone = create_backbone(CONFIG["backbone"])
-    model = YOLOv1Classifier(num_classes=num_classes, backbone=backbone).to(DEVICE)
+    model = YOLOv1Classifier(num_classes=num_classes, backbone=backbone)
     optimizer = optim.Adam(model.parameters(), **CONFIG["optimizer"])
     loss_fn = nn.CrossEntropyLoss()
 
@@ -55,8 +55,10 @@ def main():
         config=CONFIG,
         experiment_name=CONFIG["experiment_name"],
         tracking_uri=CONFIG["tracking_uri"],
+        run_id=CONFIG["run_id"],
         run_name=CONFIG["run_name"],
     )
+
     module = ClassificationModelModule(
         model=model,
         datamodule=datamodule,
@@ -68,7 +70,14 @@ def main():
         device=DEVICE,
     )
 
-    module.fit(epochs=CONFIG["epochs"], load_weights=CONFIG["load_weights"])
+    if CONFIG["run_id"] is not None:  # resuming training
+        CONFIG["ckpt"] = logger.download_artifact(
+            artifact_path="checkpoints/last.pt",
+        )
+    else:
+        CONFIG["ckpt"] = None
+
+    module.fit(epochs=CONFIG["epochs"], ckpt_path=CONFIG["ckpt"])
 
 
 if __name__ == "__main__":

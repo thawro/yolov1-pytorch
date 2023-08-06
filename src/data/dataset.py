@@ -42,8 +42,8 @@ class BaseDataset(torchvision.datasets.VisionDataset):
         labels_filepath = self._label_files[idx]
 
         image = np.array(Image.open(image_filepath).convert("RGB"))
-        annotations = read_text_file(labels_filepath)
-        return image, annotations
+        target = read_text_file(labels_filepath)
+        return image, target
 
     def __len__(self):
         return len(self._label_files)
@@ -102,7 +102,7 @@ class DetectionDataset(BaseDataset):
         return image, annots_matrix
 
 
-class ClassificationDataset(Dataset):
+class ClassificationDataset(BaseDataset):
     def __init__(
         self,
         root: str,
@@ -110,43 +110,15 @@ class ClassificationDataset(Dataset):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
     ):
-        super().__init__()
-        self.root = root
-        self.transform = transform
-        self.target_transform = target_transform
-        self.split = split
-        self._init_paths()
-
-        self.labels = read_text_file(f"{root}/labels.txt")
-        self._image_files = glob.glob(f"{self.images_path}/*")
-        ext = self._image_files[0].split(".")[-1]
-        self._label_files = [
-            img_file.replace("images/", "labels/").replace(f".{ext}", ".txt")
-            for img_file in self._image_files
-        ]
-
-    def _init_paths(self):
-        self.root = Path(self.root)
-        self.labels_path = self.root / "labels" / self.split
-        self.images_path = self.root / "images" / self.split
-
-    def get_raw_data(self, idx: int):
-        image_filepath = self._image_files[idx]
-        labels_filepath = self._label_files[idx]
-
-        image = np.array(Image.open(image_filepath).convert("RGB"))
-        annotations = read_text_file(labels_filepath)
-        return image, annotations
+        super().__init__(root, split, transform, target_transform)
 
     def __getitem__(self, idx: int) -> Any:
         image, label = self.get_raw_data(idx)
+        label = int(label[0])  # labels are read as lines from txt file
         if self.transform is not None:
             transformed = self.transform(image=image)
             image = transformed["image"]
-        return image, int(label[0])
-
-    def __len__(self):
-        return len(self._label_files)
+        return image, label
 
 
 def create_detection_datasets(S: int, B: int, dataset_path: str) -> tuple[DetectionDataset, ...]:
@@ -168,17 +140,6 @@ def create_classification_datasets(dataset_path: str) -> tuple[ClassificationDat
     train_ds = ClassificationDataset(dataset_path, "train", train_transform)
     val_ds = ClassificationDataset(dataset_path, "val", inference_transform)
     return train_ds, val_ds
-
-
-def parse_datasets_to_dataloaders(
-    train_ds: Dataset, val_ds: Dataset, test_ds: Dataset | None = None, **kwargs
-) -> tuple[DataLoader, ...]:
-    train_dl = DataLoader(dataset=train_ds, shuffle=True, **kwargs)
-    val_dl = DataLoader(dataset=val_ds, shuffle=False, **kwargs)
-    if test_ds is not None:
-        test_dl = DataLoader(dataset=test_ds, shuffle=False, **kwargs)
-        return train_dl, val_dl, test_dl
-    return train_dl, val_dl
 
 
 class DataModule:

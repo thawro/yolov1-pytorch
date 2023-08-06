@@ -10,7 +10,6 @@ from src.utils.ops import MAP
 from torchinfo import summary
 from src.utils.utils import merge_dicts, display_metrics
 from src.logging.loggers import BaseLogger
-from typing import Literal
 
 
 class BaseModelModule:
@@ -125,11 +124,11 @@ class BaseModelModule:
         self.logger.log_monitoring(step=self.epoch)
         self.epoch += 1
 
-    def fit(self, epochs: int, load_weights: bool | Literal["last", "best"]):
+    def fit(self, epochs: int, ckpt_path: str | None = None):
         try:
-            if load_weights:
-                path: str = getattr(self.logger, f"{load_weights}_ckpt_path")
-                self.load_checkpoint(path)
+            self.logger.log_config()
+            if ckpt_path is not None:
+                self.load_checkpoint(ckpt_path)
 
             for epoch in range(epochs):
                 train_metrics, val_metrics = self._common_loops()
