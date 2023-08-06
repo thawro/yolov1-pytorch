@@ -129,7 +129,8 @@ def plot_yolo_labels(
     confidences: np.ndarray | None | list = None,
     id2label: dict[int, str] | None = None,
     plot: bool = False,
-) -> np.ndarray:
+    ax: plt.Axes | None = None,
+) -> np.ndarray | tuple[np.ndarray, plt.Axes]:
     """Plot predicted boxes and labels for an image.
 
     Args:
@@ -159,8 +160,10 @@ def plot_yolo_labels(
         color = colors(class_id)
         boxes_img = plot_bbox(boxes_img, bbox, class_name, conf, color, txt_color=(0, 0, 0))
     if plot:
-        plt.figure(figsize=(6, 6))
-        plt.axis("off")
-        plt.imshow(boxes_img)
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(6, 6))
+        ax.axis("off")
+        ax.imshow(boxes_img)
         plt.show()
+        return boxes_img, ax
     return boxes_img
