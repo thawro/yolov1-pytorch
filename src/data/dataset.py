@@ -66,21 +66,34 @@ class DetectionDataset(BaseDataset):
         self.id2label = {i: label for i, label in enumerate(self.labels)}
         self.C = len(self.labels)
 
+    def _transform(
+        self, image: np.ndarray, bboxes: np.ndarray, labels: np.ndarray
+    ) -> tuple[torch.Tensor, ...]:
+        if self.transform is not None:
+            transformed = self.transform(image=image, bboxes=bboxes, labels=labels)
+            return (
+                transformed["image"],
+                torch.Tensor(transformed["bboxes"]),
+                torch.Tensor(transformed["labels"]),
+            )
+        else:
+            return (torch.from_numpy(image), torch.from_numpy(bboxes), torch.from_numpy(labels))
+
     def __getitem__(self, idx: int) -> Any:
         image, annots = self.get_raw_data(idx)
         # annotations cols:
         # class x_center y_center width height
-        annots = torch.Tensor([[float(x) for x in label.split(" ")] for label in annots])
+        annots = np.array([[float(x) for x in label.split(" ")] for label in annots])
 
         bboxes = annots[:, 1:]
         labels = annots[:, 0]
-        if self.transform is not None:
-            transformed = self.transform(image=image, bboxes=bboxes, labels=labels)
-            image = transformed["image"]
-            bboxes = transformed["bboxes"]
-            labels = transformed["labels"]
-        bboxes, labels = torch.Tensor(bboxes), torch.Tensor(labels)
+        image, bboxes, labels = self._transform(image, bboxes, labels)
+
         annots = torch.cat((labels.unsqueeze(1), bboxes), dim=1)
+
+        annots_matrix = torch.zeros((self.S, self.S, self.C + self.B * 5))
+        if len(bboxes) == 0:
+            return image, annots_matrix
 
         xy = bboxes[:, :2]
         wh = bboxes[:, 2:]
@@ -90,8 +103,6 @@ class DetectionDataset(BaseDataset):
         boxes_wh_cell = wh * self.S
 
         boxes_xywh_cell = torch.cat((boxes_xy_cell, boxes_wh_cell), dim=1)
-
-        annots_matrix = torch.zeros((self.S, self.S, self.C + self.B * 5))
 
         for (j, i), xywh, label in zip(boxes_ji.tolist(), boxes_xywh_cell, labels):
             if annots_matrix[i, j, self.C] == 0:  # first object

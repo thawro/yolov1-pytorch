@@ -164,6 +164,6 @@ def plot_yolo_labels(
             fig, ax = plt.subplots(figsize=(6, 6))
         ax.axis("off")
         ax.imshow(boxes_img)
-        plt.show()
+        # plt.show()
         return boxes_img, ax
     return boxes_img

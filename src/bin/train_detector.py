@@ -20,9 +20,12 @@ import torch
 torch.manual_seed(SEED)
 
 CONFIG = {
-    "dataset": "yolo_HWD+",
+    "dataset": "VOC",
     "backbone": "yolov1-tiny",
-    "classifier_run_id": "d29a4f26ae9c48d19a642292d8f32c1b",
+    # "dataset": "yolo_HWD+",
+    # "classifier_run_id": "d29a4f26ae9c48d19a642292d8f32c1b", # HWD+ classifier
+    # "run_id": "13177606a5164da9ba90e661234bc1de", # yolo-HWD+ detector
+    "classifier_run_id": None,
     "run_id": None,
     "experiment_name": "detector",
     "tracking_uri": "http://0.0.0.0:5000",

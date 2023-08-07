@@ -2,9 +2,6 @@ from tqdm import tqdm
 import urllib.request
 from src.logging.pylogger import get_pylogger
 from typing import Any
-import torch
-from torch import nn
-import torch.utils.data
 from datetime import datetime
 from pathlib import Path
 
@@ -48,33 +45,6 @@ def read_text_file(filename: str | Path) -> list[str]:
         lines = file.readlines()
         lines = [line.strip() for line in lines]  # Optional: Remove leading/trailing whitespace
     return lines
-
-
-def train_loop(
-    model: nn.Module,
-    dataloader: torch.utils.data.DataLoader,
-    optimizer: torch.optim.Optimizer,
-    loss_fn: nn.modules.loss._Loss,
-    device: str = "cpu",
-    limit_batches: int = -1,
-) -> dict[str, float]:
-    loop = tqdm(dataloader, leave=True, desc="Train")
-    losses = []
-
-    for x, y in loop:
-        if limit_batches == 0:
-            break
-        x, y = x.to(device), y.to(device)
-        out = model(x)
-        loss = loss_fn(out, y)
-        losses.append(loss.item())
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        loop.set_postfix(loss=loss.item())
-        limit_batches -= 1
-    mean_loss = sum(losses) / len(losses)
-    return {"loss": mean_loss}
 
 
 def merge_dicts(sep: str = "/", **dict_of_dicts) -> dict[str, Any]:
