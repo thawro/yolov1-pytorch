@@ -20,13 +20,13 @@ import torch
 torch.manual_seed(SEED)
 
 CONFIG = {
-    "dataset": "VOC",
+    # "dataset": "VOC",
     "backbone": "yolov1-tiny",
-    # "dataset": "yolo_HWD+",
-    # "classifier_run_id": "d29a4f26ae9c48d19a642292d8f32c1b", # HWD+ classifier
-    # "run_id": "13177606a5164da9ba90e661234bc1de", # yolo-HWD+ detector
+    "dataset": "yolo_HWD+",
+    # "classifier_run_id": "d29a4f26ae9c48d19a642292d8f32c1b",  # HWD+ classifier
+    # "run_id": None,  # yolo-HWD+ detector
     "classifier_run_id": None,
-    "run_id": None,
+    "run_id": "13177606a5164da9ba90e661234bc1de",
     "experiment_name": "detector",
     "tracking_uri": "http://0.0.0.0:5000",
     "epochs": 130,
@@ -39,7 +39,7 @@ CONFIG = {
     "scheduler": {"milestones": [10, 20, 30], "gamma": 0.5},
 }
 
-CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}"
+CONFIG["run_name"] = f"{CONFIG['dataset']}__{CONFIG['backbone']}_objectness[0,1]"
 
 DS_PATH = str(DATA_PATH / CONFIG["dataset"])
 

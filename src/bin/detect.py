@@ -28,23 +28,28 @@ def detect(
     id2label: dict[int, str],
     device: str = "cpu",
 ):
-    preds_path = ROOT / "predictions"
+    preds_path = ROOT / "img"
     preds_path.mkdir(parents=True, exist_ok=True)
     model.eval()
     images_tensor = torch.stack(images).to(device)
     all_pred_boxes = model.inference(images_tensor)
     all_pred_boxes = model.perform_nms(all_pred_boxes, iou_threshold, obj_threshold)
     for i, (img, pred_boxes) in enumerate(zip(images, all_pred_boxes)):
-        nms_boxes = torch.tensor(pred_boxes).numpy()
-        img = (img.permute(1, 2, 0).to("cpu").numpy() * 255).astype(np.uint8)
-        class_ids = nms_boxes[:, 0].astype(np.int64)
-        obj_scores = nms_boxes[:, 1]
-        obj_scores = np.clip(obj_scores, 0, 1)
-        boxes_xywhn = nms_boxes[:, 2:]
         fig, ax = plt.subplots(figsize=(6, 6))
-        plot_yolo_labels(
-            img, boxes_xywhn, class_ids, obj_scores, plot=True, id2label=id2label, ax=ax
-        )
+        img = (img.permute(1, 2, 0).to("cpu").numpy() * 255).astype(np.uint8)
+        nms_boxes = torch.tensor(pred_boxes).numpy()
+        if len(nms_boxes) == 0:
+            ax.imshow(img)
+            ax.axis("off")
+        else:
+            class_ids = nms_boxes[:, 0].astype(np.int64)
+            obj_scores = nms_boxes[:, 1]
+            obj_scores = np.clip(obj_scores, 0, 1)
+            boxes_xywhn = nms_boxes[:, 2:]
+
+            plot_yolo_labels(
+                img, boxes_xywhn, class_ids, obj_scores, plot=True, id2label=id2label, ax=ax
+            )
         filename = str(preds_path / f"{i}.jpg")
         fig.savefig(filename, bbox_inches="tight")
 

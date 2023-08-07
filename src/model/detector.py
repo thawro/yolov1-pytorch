@@ -53,6 +53,8 @@ class YOLOv1Detector(nn.Module):
         # make x and y in range [0, 1]
         out[..., : self.C][..., 1::5] = F.sigmoid(out[..., : self.C][..., 1::5])
         out[..., : self.C][..., 2::5] = F.sigmoid(out[..., : self.C][..., 2::5])
+        # make objectness in range [0, 1]
+        # out[..., : self.C][..., 0::5] = F.sigmoid(out[..., : self.C][..., 0::5])
         return out
 
     def cellboxes_to_boxes(self, cell_boxes):

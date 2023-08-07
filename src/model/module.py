@@ -122,6 +122,7 @@ class BaseModelModule:
     def _epoch_end(self, train_metrics: dict[str, float], val_metrics: dict[str, float]):
         self._display_metrics(self.epoch, train_metrics, val_metrics)
         self.logger.log_monitoring(step=self.epoch)
+        self.logger.log("learning_rate", self.optimizer.param_groups[0]["lr"], step=self.epoch)
         self.epoch += 1
 
     def fit(self, epochs: int, ckpt_path: str | None = None):

@@ -57,3 +57,25 @@ python src/bin/train_classifier.py
 ```
 python src/bin/detect.py
 ```
+
+# Example results for the handwritten digits detection:
+## Dataset
+[HWD+](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9702948/) dataset was used to create the data for classifier and detector training (more about dataset creation in [my YOLOv8 project](https://github.com/thawro/yolov8-digits-detection#yolo_hwd)).
+
+## Training curves
+Train and validation losses
+![train_val_loss](img/train_val_loss.png)
+
+Validation mAP (~0.83)
+![val_map](img/val_map.png)
+
+## Predictions on images from the test set
+![pred_0](img/0.jpg)
+![pred_1](img/1.jpg)
+![pred_2](img/2.jpg)
+![pred_3](img/3.jpg)
+![pred_4](img/4.jpg)
+![pred_5](img/5.jpg)
+![pred_6](img/6.jpg)
+![pred_7](img/7.jpg)
+
