@@ -6,7 +6,7 @@ from .detector import YOLOv1Detector
 from src.utils.model import load_checkpoint, save_checkpoint
 from tqdm.auto import tqdm
 from torchmetrics.functional import accuracy
-from src.utils.ops import MAP
+from src.metrics import MAP
 from torchinfo import summary
 from src.utils.utils import merge_dicts, display_metrics
 from src.logging.loggers import BaseLogger
