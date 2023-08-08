@@ -3,41 +3,41 @@ PyTorch implementation of [YOLOv1](https://arxiv.org/pdf/1506.02640.pdf) archite
 
 # Repo structure
     .
-    ├── datasets						                # datasets files (images and labels)
-    ├── img						                        # README images
-    ├── mlruns						                    # mlflow data for experiments (artifacts and metrics)
-    ├── notebooks						                # some jupyter notebooks
-    ├── results						                    # experiments results (artifacts and metrics)
+    ├── datasets                                        # datasets files (images and labels)
+    ├── img                                             # README images
+    ├── mlruns                                          # mlflow data for experiments (artifacts and metrics)
+    ├── notebooks                                       # some jupyter notebooks
+    ├── results                                         # experiments results (artifacts and metrics)
     └── src
-        ├── bin						                    # runnable python scripts
-        │   ├── data					                # scripts related to data creation
-        │   │   ├── parse_voc_to_yolo.py			    # parse VOC dataset to YOLO format
-        │   │   ├── prepare_HWD+_for_classification.py	# create HWD+ data for classification task
-        │   │   └── prepare_HWD+_for_detection.py		# create HWD+ data for detection task
-        │   ├── detect.py					            # run trained model on test data 
-        │   ├── train_classifier.py			            # train classifier 
-        │   └── train_detector.py				        # train detector
+        ├── bin                                         # runnable python scripts
+        │   ├── data                                    # scripts related to data creation
+        │   │   ├── parse_voc_to_yolo.py                # parse VOC dataset to YOLO format
+        │   │   ├── prepare_HWD+_for_classification.py  # create HWD+ data for classification task
+        │   │   └── prepare_HWD+_for_detection.py       # create HWD+ data for detection task
+        │   ├── detect.py                               # run trained model on test data 
+        │   ├── train_classifier.py                     # train classifier 
+        │   └── train_detector.py                       # train detector
         ├── data						
-        │   ├── dataset.py					            # classification and detection PyTorch datasets
-        │   └── transforms.py				            # transforms used for training
+        │   ├── dataset.py                              # classification and detection PyTorch datasets
+        │   └── transforms.py                           # transforms used for training
         ├── logging
-        │   ├── loggers.py					            # logger classes (for mlflow logging)
-        │   ├── monitoring.py				            # CPU and GPU monitoring
-        │   └── pylogger.py				                # nicely colored terminal logger
+        │   ├── loggers.py                              # logger classes (for mlflow logging)
+        │   ├── monitoring.py                           # CPU and GPU monitoring
+        │   └── pylogger.py                             # nicely colored terminal logger
         ├── model
-        ├── backbones.py				                # YOLO backbones
-        │   ├── classifier.py				            # classifier module
-        │   ├── detector.py				                # detector module
-        │   ├── helpers.py					            # helper classes (e.g. CNNBlock)
-        │   ├── loss.py					                # detector loss function
-        │   ├── module.py					            # wrapper for training (similar to PyTorch Lightning)
+        ├── backbones.py                                # YOLO backbones
+        │   ├── classifier.py                           # classifier module
+        │   ├── detector.py                             # detector module
+        │   ├── helpers.py                              # helper classes (e.g. CNNBlock)
+        │   ├── loss.py                                 # detector loss function
+        │   ├── module.py                               # wrapper for training (similar to PyTorch Lightning)
         ├── utils
-        │   ├── config.py					            # config constants
-        │   ├── model.py					            # model related utils
-        │   ├── ops.py					                # boxes related operations
+        │   ├── config.py                               # config constants
+        │   ├── model.py                                # model related utils
+        │   ├── ops.py                                  # boxes related operations
         │   └── utils.py
-        ├── visualization.py				            # boxes plotting
-        └── metrics.py					                # MAP calculation
+        ├── visualization.py                            # boxes plotting
+        └── metrics.py                                  # MAP calculation
 
 # Details
 Model training is split into two parts:
